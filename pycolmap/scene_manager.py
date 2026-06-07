@@ -1,4 +1,5 @@
 # Author: True Price <jtprice at cs.unc.edu>
+# Updated by junyuan-fang: https://github.com/rmbrualla/pycolmap/pull/6#issuecomment-2970262506
 
 import array
 import numpy as np
@@ -180,7 +181,6 @@ class SceneManager:
 
     def _load_images_txt(self, input_file):
         self.images = OrderedDict()
-
         with open(input_file, 'r') as f:
             is_camera_description_line = False
 
@@ -194,9 +194,10 @@ class SceneManager:
 
                 if is_camera_description_line:
                     image_id = int(data[0])
-                    image = Image(data[-1], int(data[-2]),
-                                  Quaternion(np.array(map(float, data[1:5]))),
-                                  np.array(map(float, data[5:8])))
+                    # image = Image(data[-1], int(data[-2]),
+                    #               Quaternion(np.array(map(float, data[1:5]))),
+                    #               np.array(map(float, data[5:8])))
+                    image = Image(data[-1], int(data[-2]),Quaternion( np.array(data[1:5]).astype(float)), np.array(data[5:8]).astype(float))
                 else:
                     image.points2D = np.array(
                         [map(float, data[::3]), map(float, data[1::3])]).T
@@ -272,13 +273,17 @@ class SceneManager:
 
                 self.point3D_ids.append(point3D_id)
                 self.point3D_id_to_point3D_idx[point3D_id] = len(self.points3D)
-                self.points3D.append(map(np.float64, data[1:4]))
-                self.point3D_colors.append(map(np.uint8, data[4:7]))
+                # self.points3D.append(map(np.float64, data[1:4]))
+                # self.point3D_colors.append(map(np.uint8, data[4:7]))
+                self.points3D.append(np.array(data[1:4], dtype=np.float64))
+                self.point3D_colors.append(np.array(data[4:7], dtype=np.uint8))
                 self.point3D_errors.append(np.float64(data[7]))
 
                 # load (image id, point2D idx) pairs
+                # self.point3D_id_to_images[point3D_id] = \
+                #     np.array(map(np.uint32, data[8:])).reshape(-1, 2)
                 self.point3D_id_to_images[point3D_id] = \
-                    np.array(map(np.uint32, data[8:])).reshape(-1, 2)
+                    np.array(np.array(data[8:]).astype(np.uint32)).reshape(-1, 2)
 
         self.points3D = np.array(self.points3D)
         self.point3D_ids = np.array(self.point3D_ids)
